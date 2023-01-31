@@ -190,6 +190,7 @@ def index(url):
 			if app.config['S3'] == 'True':
 				response = s3.get_object(Bucket=bucket_name, Key=url)
 				image_data = response['Body'].read()
+				print(image_data[0:6], image_data[0:9])
 				if image_data[0:6] == b'redire': # redirect
 					response = make_response(redirect("/media/" + image_data[9:].decode()))
 					expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
@@ -199,8 +200,7 @@ def index(url):
 				else:
 					file_object = io.BytesIO(image_data)
 					file_object.seek(0)
-					ContentType = response['ContentType']
-					response = make_response(send_file(file_object, mimetype=ContentType))
+					response = make_response(send_file(file_object, mimetype=response['ContentType']))
 					expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
 					response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
 					response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
