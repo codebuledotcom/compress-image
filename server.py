@@ -1,10 +1,11 @@
-import os, datetime, bson, mimetypes, hashlib, schedule
+import os, datetime, bson, mimetypes, hashlib, schedule, boto3
 from flask import Flask, request, send_file, make_response, redirect, render_template, jsonify
 from PIL import Image
 from flask_cors import CORS
 from fakeredis import FakeStrictRedis
 from dotenv import load_dotenv
 load_dotenv()
+
 
 app = Flask(__name__)
 redis = FakeStrictRedis()
@@ -19,6 +20,19 @@ app.config['MAX_FILE_SIZE'] 		= int(os.environ.get('MAX_FILE_SIZE', 20 * 1024 * 
 app.config['SCHEME'] 				= os.environ.get('SCHEME', 'http')
 app.config['S3']					= os.environ.get('S3', 'False')
 print(app.config['S3'])
+
+
+if app.config['S3'] == 'True':
+	session = boto3.session.Session()
+	s3 = session.client(
+		's3',
+		endpoint_url = os.environ.get('ENDPOINT_URL', None),
+		aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID', None),
+		aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY', None),
+	)
+
+	
+	
 def getall_file():
 	if app.config['S3'] == 'True':
 		response = s3.list_objects(Bucket=bucket_name)
