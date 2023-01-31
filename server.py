@@ -181,7 +181,7 @@ def page_not_found(e):
 	return response
 
 if __name__ == "__main__":
-	getall_file()
 	if not os.path.exists(app.config['UPLOAD_FOLDER']):
 		os.mkdir(app.config['UPLOAD_FOLDER'])
+	getall_file()
 	app.run(host="0.0.0.0", port=8080, debug=True)
