@@ -19,7 +19,8 @@ app.config['ALLOWED_EXTENSIONS'] 	= {'.png', '.jpg', '.webp', '.svg', '.gif', '.
 app.config['MAX_FILE_SIZE'] 		= int(os.environ.get('MAX_FILE_SIZE', 20 * 1024 * 1024)) 
 app.config['SCHEME'] 				= os.environ.get('SCHEME', 'http')
 app.config['S3']					= os.environ.get('S3', 'False')
-bucket_name = os.environ.get('BUCKET_NAME', None)
+app.config['BUCKET_NAME'] = os.environ.get('BUCKET_NAME', None)
+#bucket_name = os.environ.get('BUCKET_NAME', None)
 
 
 if app.config['S3'] == 'True':
@@ -34,15 +35,15 @@ if app.config['S3'] == 'True':
 ########### s3 ###########
 def upload_to_s3(full_file_name, file_name, extra_args = {}):
     try:
-        s3.head_object(Bucket=bucket_name, Key=file_name)
+        s3.head_object(Bucket=app.config['BUCKET_NAME'], Key=file_name)
         file_remove(full_file_name)
     except s3.exceptions.ClientError as e:
         error_code = e.response['Error']['Code']
         if error_code == '404':
-            s3.upload_file(full_file_name, bucket_name, file_name, extra_args)
+            s3.upload_file(full_file_name, app.config['BUCKET_NAME'], file_name, extra_args)
             file_remove(full_file_name)
         else:
-            print('Error bucket', bucket_name)
+            print('Error bucket', app.config['BUCKET_NAME'])
             file_remove(full_file_name)
     except Exception as e:
         file_remove(full_file_name)
@@ -50,14 +51,14 @@ def upload_to_s3(full_file_name, file_name, extra_args = {}):
 	
 def getall_file():
 	if app.config['S3'] == 'True':
-		response = s3.list_objects(Bucket=bucket_name)
+		response = s3.list_objects(Bucket=app.config['BUCKET_NAME'])
 		if 'Contents' in response:
 			objects = response['Contents']
 			for obj in objects:
 				# Download the image from S3
 				EXTENSIONS = os.path.splitext(obj['Key'])
 				if EXTENSIONS and not (EXTENSIONS[1] in {'.svg', '.gif'}):
-					image_data = s3.get_object(Bucket=bucket_name, Key=obj['Key'])['Body'].read()
+					image_data = s3.get_object(Bucket=app.config['BUCKET_NAME'], Key=obj['Key'])['Body'].read()
 					if image_data[0:8] != b'redirect':
 						# Create a new SHA-256 hash object
 						hash_object = hashlib.sha256()
@@ -69,7 +70,7 @@ def getall_file():
 						if value is None:
 							redis.set(hex_hash, obj['Key'])
 						else:
-							s3.put_object(Bucket=bucket_name, Key=obj['Key'], Body='redirect:' + value.decode())
+							s3.put_object(Bucket=app.config['BUCKET_NAME'], Key=obj['Key'], Body='redirect:' + value.decode())
 							
 	else:
 		files = os.listdir(app.config['UPLOAD_FOLDER'])
@@ -210,7 +211,7 @@ def index(url):
 			response.headers['Cache-Control'] 	= 'max-age='+str(seconds)
 			return response
 	elif app.config['S3'] == 'True':
-		response = s3.get_object(Bucket=bucket_name, Key=url)
+		response = s3.get_object(Bucket=app.config['BUCKET_NAME'], Key=url)
 		image_data = response['Body'].read()
 		if image_data[0:8] == b'redirect': # redirect
 			response = make_response(redirect("/media/" + image_data[9:].decode()))
