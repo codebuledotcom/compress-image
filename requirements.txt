@@ -2,3 +2,7 @@ boto3
 Flask
 Pillow
 flask-cors
+pymongo
+fakeredis
+python-dotenv
+schedule
