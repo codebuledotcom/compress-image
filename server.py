@@ -149,9 +149,9 @@ def index(url):
 			return response
 	
 	expires = datetime.datetime.now() + datetime.timedelta(seconds=600)
-    response = make_response('Bad URL hash', 404)
-    response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-    response.headers['Cache-Control'] = 'max-age='+str(600)
+	response = make_response('Bad URL hash', 404)
+	response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+	response.headers['Cache-Control'] = 'max-age='+str(600)
 	return response
 
 	
