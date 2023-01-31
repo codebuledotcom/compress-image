@@ -18,7 +18,7 @@ app.config['ALLOWED_EXTENSIONS'] 	= {'.png', '.jpg', '.webp', '.svg', '.gif', '.
 app.config['MAX_FILE_SIZE'] 		= int(os.environ.get('MAX_FILE_SIZE', 20 * 1024 * 1024)) 
 app.config['SCHEME'] 				= os.environ.get('SCHEME', 'http')
 app.config['S3']					= os.environ.get('S3', 'False')
-
+print(app.config['S3'])
 def getall_file():
 	if app.config['S3'] == 'True':
 		response = s3.list_objects(Bucket=bucket_name)
