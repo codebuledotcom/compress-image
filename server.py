@@ -148,10 +148,10 @@ def index(url):
 			response.headers['Cache-Control'] = 'max-age='+str(seconds)
 			return response
 	
-	expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
+	expires = datetime.datetime.now() + datetime.timedelta(seconds=600)
     response = make_response('Bad URL hash', 404)
     response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-    response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
+    response.headers['Cache-Control'] = 'max-age='+str(600)
 	return response
 
 	
