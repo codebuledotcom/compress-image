@@ -58,7 +58,7 @@ def getall_file():
 				EXTENSIONS = os.path.splitext(obj['Key'])
 				if EXTENSIONS and not (EXTENSIONS[1] in {'.svg', '.gif'}):
 					image_data = s3.get_object(Bucket=bucket_name, Key=obj['Key'])['Body'].read()
-					if image_data[0:6] != b'redire':
+					if image_data[0:8] != b'redirect':
 						# Create a new SHA-256 hash object
 						hash_object = hashlib.sha256()
 						# Update the hash object with the video file data
@@ -79,7 +79,7 @@ def getall_file():
 			with open(FULL, 'rb+') as file: # rbw
 				# Read the contents of the file
 				contents = file.read()
-				if contents[0:6] != b'redire':
+				if contents[0:8] != b'redirect':
 					hash_object = hashlib.sha256()
 					hash_object.update(contents)
 					hex_hash = hash_object.hexdigest()
@@ -87,7 +87,7 @@ def getall_file():
 					if value is None:
 						redis.set(hex_hash, filename)
 					else:
-						w_value = "redire:"+value.decode()
+						w_value = "redirect:"+value.decode()
 						file.close()
 						with open(FULL, 'wb') as file:
 							file.write(w_value.encode())
@@ -190,8 +190,7 @@ def index(url):
 			if app.config['S3'] == 'True':
 				response = s3.get_object(Bucket=bucket_name, Key=url)
 				image_data = response['Body'].read()
-				print(image_data[0:6], image_data[0:9])
-				if image_data[0:6] == b'redire': # redirect
+				if image_data[0:8] == b'redirect': # redirect
 					response = make_response(redirect("/media/" + image_data[9:].decode()))
 					expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
 					response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
@@ -210,8 +209,8 @@ def index(url):
 					# Read the contents of the file
 					contents = file.read()
 					file.close()
-					if contents[0:6] == b'redire':
-						response 	= make_response(redirect("/media/" + contents[7:].decode()))
+					if contents[0:8] == b'redirect':
+						response 	= make_response(redirect("/media/" + contents[9:].decode()))
 						expires 	= datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
 						response.headers['Expires'] 		= expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
 						response.headers['Cache-Control'] 	= 'max-age='+str(app.config['SECONDS'])
