@@ -13,7 +13,9 @@ s3 = session.client(
     aws_secret_access_key = 'wQSw/gBmZ2JTikESjHSbQqe9p4BWthW05JYbnmNY32k',
 )
 
-
+@app.route("/", methods = ['GET'])
+def api_v1_s3(storage, path): 
+    return '', 200
 
 @app.errorhandler(404)
 def page_not_found(e):
