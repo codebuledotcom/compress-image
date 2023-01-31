@@ -32,20 +32,24 @@ if app.config['S3'] == 'True':
 
 ########### s3 ###########
 def upload_to_s3(full_file_name, file_name, extra_args = {}):
-    try:
-        s3.head_object(Bucket=app.config['BUCKET_NAME'], Key=file_name)
-        file_remove(full_file_name)
-    except s3.exceptions.ClientError as e:
-        error_code = e.response['Error']['Code']
-        if error_code == '404':
-            s3.upload_file(full_file_name, app.config['BUCKET_NAME'], file_name, extra_args)
-            file_remove(full_file_name)
-        else:
-            print('Error bucket', app.config['BUCKET_NAME'])
-            file_remove(full_file_name)
-    except Exception as e:
-        file_remove(full_file_name)
-        print(f"An error occurred: {e}")
+	try:
+		s3.head_object(Bucket=app.config['BUCKET_NAME'], Key=file_name)
+		file_remove(full_file_name)
+		return True
+	except s3.exceptions.ClientError as e:
+		error_code = e.response['Error']['Code']
+		if error_code == '404':
+			s3.upload_file(full_file_name, app.config['BUCKET_NAME'], file_name, extra_args)
+			file_remove(full_file_name)
+			return True
+		else:
+			print('Error bucket', app.config['BUCKET_NAME'])
+			file_remove(full_file_name)
+			return False
+	except Exception as e:
+		file_remove(full_file_name)
+		print(f"An error occurred: {e}")
+		return False
 	
 def getall_file():
 	if app.config['S3'] == 'True':
@@ -144,18 +148,22 @@ def upload():
 				if value is not None:
 					file_remove(full_file_name)
 					messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ value
+					success  = True
 				else:
 					if app.config['S3'] == 'True':
-						upload_to_s3(full_file_name, file_name, extra_args = {
+						if upload_to_s3(full_file_name, file_name, extra_args = {
                             'ContentType': file.content_type,
                             'Metadata': {
                                 'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr
                             }
-                        })
-						messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
+                        }):
+							messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
+							success  = True
+						else:
+							messages = 'error upload to s3'
 					else:
 						messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
-				success  = True
+						success  = True
 			else:
 				messages = 'do not use image files'
 		
