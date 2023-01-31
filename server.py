@@ -181,7 +181,6 @@ def is_support_webp(accept_header):
     return (("*/*" in accept_header) or ("webp" in accept_header))
 		
 		
-########## cdn ###########
 @app.route('/media/<url>', methods=['get'])
 def index(url):
 	if len(request.args) > 0:
