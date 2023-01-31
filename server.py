@@ -20,7 +20,6 @@ app.config['MAX_FILE_SIZE'] 		= int(os.environ.get('MAX_FILE_SIZE', 20 * 1024 * 
 app.config['SCHEME'] 				= os.environ.get('SCHEME', 'http')
 app.config['S3']					= os.environ.get('S3', 'False')
 bucket_name = os.environ.get('BUCKET_NAME', None)
-print(app.config['S3'])
 
 
 if app.config['S3'] == 'True':
@@ -32,7 +31,22 @@ if app.config['S3'] == 'True':
 		aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY', None),
 	)
 
-	
+########### s3 ###########
+def upload_to_s3(full_file_name, file_name, extra_args = {}):
+    try:
+        s3.head_object(Bucket=bucket_name, Key=file_name)
+        file_remove(full_file_name)
+    except s3.exceptions.ClientError as e:
+        error_code = e.response['Error']['Code']
+        if error_code == '404':
+            s3.upload_file(full_file_name, bucket_name, file_name, extra_args)
+            file_remove(full_file_name)
+        else:
+            print('Error bucket', bucket_name)
+            file_remove(full_file_name)
+    except Exception as e:
+        file_remove(full_file_name)
+        print(f"An error occurred: {e}")
 	
 def getall_file():
 	if app.config['S3'] == 'True':
@@ -132,7 +146,15 @@ def upload():
 					file_remove(full_file_name)
 					messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ value
 				else:
-					messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
+					if app.config['S3'] == 'True':
+						upload_to_s3(full_file_name, file_name, extra_args = {
+                            'ContentType': file.content_type,
+                            'Metadata': {
+                                'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr
+                            }
+                        })
+					else:
+						messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
 				success  = True
 			else:
 				messages = 'do not use image files'
