@@ -1,4 +1,4 @@
-import os, datetime, bson, mimetypes, hashlib, schedule, boto3
+import os, datetime, bson, mimetypes, hashlib, schedule, boto3, io
 from flask import Flask, request, send_file, make_response, redirect, render_template, jsonify
 from PIL import Image
 from flask_cors import CORS
@@ -187,45 +187,44 @@ def index(url):
 	if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], url)):
 		support_webp = is_support_webp(request.headers.get("Accept"))
 		if support_webp:
-			if app.config['S3'] == 'True':
-				response = s3.get_object(Bucket=bucket_name, Key=url)
-				image_data = response['Body'].read()
-				if image_data[0:8] == b'redirect': # redirect
-					response = make_response(redirect("/media/" + image_data[9:].decode()))
-					expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
-					response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-					response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
+			with open(os.path.join(app.config['UPLOAD_FOLDER'], url), 'rb') as file:
+				# Read the contents of the file
+				contents = file.read()
+				file.close()
+				if contents[0:8] == b'redirect':
+					response 	= make_response(redirect("/media/" + contents[9:].decode()))
+					expires 	= datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
+					response.headers['Expires'] 		= expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+					response.headers['Cache-Control'] 	= 'max-age='+str(app.config['SECONDS'])
 					return response
-				else:
-					file_object = io.BytesIO(image_data)
-					file_object.seek(0)
-					response = make_response(send_file(file_object, mimetype=response['ContentType']))
-					expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
-					response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-					response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
-					return response
-			else:
-				with open(os.path.join(app.config['UPLOAD_FOLDER'], url), 'rb') as file:
-					# Read the contents of the file
-					contents = file.read()
-					file.close()
-					if contents[0:8] == b'redirect':
-						response 	= make_response(redirect("/media/" + contents[9:].decode()))
-						expires 	= datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
-						response.headers['Expires'] 		= expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-						response.headers['Cache-Control'] 	= 'max-age='+str(app.config['SECONDS'])
-						return response
-				mime_type, encoding = mimetypes.guess_type(os.path.join(app.config['UPLOAD_FOLDER'], url))
-				response = make_response(send_file(os.path.join(app.config['UPLOAD_FOLDER'], url), mimetype=mime_type))
-				expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
-				response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-				response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
-				return response
+			mime_type, encoding = mimetypes.guess_type(os.path.join(app.config['UPLOAD_FOLDER'], url))
+			response = make_response(send_file(os.path.join(app.config['UPLOAD_FOLDER'], url), mimetype=mime_type))
+			expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
+			response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+			response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
+			return response
 		else:
 			response	= make_response(send_file('templates/webp.png', mimetype='image/webp'))
 			expires 	= datetime.datetime.now() + datetime.timedelta(seconds=seconds)
 			response.headers['Expires'] 		= expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
 			response.headers['Cache-Control'] 	= 'max-age='+str(seconds)
+			return response
+	elif app.config['S3'] == 'True':
+		response = s3.get_object(Bucket=bucket_name, Key=url)
+		image_data = response['Body'].read()
+		if image_data[0:8] == b'redirect': # redirect
+			response = make_response(redirect("/media/" + image_data[9:].decode()))
+			expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
+			response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+			response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
+			return response
+		else:
+			file_object = io.BytesIO(image_data)
+			file_object.seek(0)
+			response = make_response(send_file(file_object, mimetype=response['ContentType']))
+			expires = datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
+			response.headers['Expires'] = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+			response.headers['Cache-Control'] = 'max-age='+str(app.config['SECONDS'])
 			return response
 	
 	expires 	= datetime.datetime.now() + datetime.timedelta(seconds=600)
