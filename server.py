@@ -20,8 +20,6 @@ app.config['MAX_FILE_SIZE'] 		= int(os.environ.get('MAX_FILE_SIZE', 20 * 1024 * 
 app.config['SCHEME'] 				= os.environ.get('SCHEME', 'http')
 app.config['S3']					= os.environ.get('S3', 'False')
 app.config['BUCKET_NAME'] = os.environ.get('BUCKET_NAME', None)
-#bucket_name = os.environ.get('BUCKET_NAME', None)
-
 
 if app.config['S3'] == 'True':
 	session = boto3.session.Session()
