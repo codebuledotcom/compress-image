@@ -152,7 +152,8 @@ def upload():
 						if upload_to_s3(full_file_name, file_name, extra_args = {
                             'ContentType': file.content_type,
                             'Metadata': {
-                                'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr
+                                'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr,
+                                'datetime': datetime.today().strftime('%Y-%m-%d')
                             }
                         }):
 							messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
