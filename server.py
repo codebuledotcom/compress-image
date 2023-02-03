@@ -253,7 +253,7 @@ def robots():
 def favicon():
 	_seconds 	= app.config['SECONDS'] * 2
 	expires 	= datetime.datetime.now() + datetime.timedelta(seconds=_seconds)
-	response 	= make_response(send_file('favicon.png'))
+	response 	= make_response(send_file('templates/favicon.png'))
 	response.headers['Expires'] 		= expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
 	response.headers['Cache-Control'] 	= 'max-age='+str(_seconds)
 	return response, 200
