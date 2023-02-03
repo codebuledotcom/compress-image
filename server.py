@@ -153,7 +153,7 @@ def upload():
                             'ContentType': file.content_type,
                             'Metadata': {
                                 'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr,
-                                'datetime': datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+                                'datetime': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
                             }
                         }):
 							messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
