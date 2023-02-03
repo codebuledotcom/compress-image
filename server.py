@@ -151,6 +151,7 @@ def upload():
 					if app.config['S3'] == 'True':
 						if upload_to_s3(full_file_name, file_name, extra_args = {
                             'ContentType': file.content_type,
+                            'Cache-Control': app.config['SECONDS'],
                             'Metadata': {
                                 'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr,
                                 'datetime': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
