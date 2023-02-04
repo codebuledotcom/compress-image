@@ -1,4 +1,4 @@
-import os, datetime, bson, mimetypes, hashlib, schedule, boto3, io
+import os, datetime, bson, mimetypes, hashlib, schedule, boto3, io, uuid
 from flask import Flask, request, send_file, make_response, redirect, render_template, jsonify
 from PIL import Image
 from flask_cors import CORS
@@ -128,7 +128,18 @@ def has_cache_other(full_file_name, file_name):
         redis.set(hex_hash, file_name)
     else:
         return value.decode()
-			
+
+		
+		
+# แก้ให้เป็นวิธีของตัวเอง
+def get_uuid():
+	# Generate a random ObjectId
+	id_uuid = str(bson.ObjectId())
+	# Generate a random UUID
+	random_uuid = uuid.uuid4()
+	id_uuid = id_uuid + "_" + random_uuid
+	return id_uuid
+		
 @app.route('/', methods=['GET', 'POST'])
 def upload():
 	if request.method == 'POST':
@@ -137,7 +148,7 @@ def upload():
 		success		= False
 		if file:
 			EXTENSIONS 		= os.path.splitext(file.filename)[1]
-			file_name 		= str(bson.ObjectId()) + EXTENSIONS
+			file_name 		= get_uuid() + EXTENSIONS
 			full_file_name 	= app.config['UPLOAD_FOLDER'] + file_name
 			file.save(full_file_name)
 			
@@ -264,10 +275,7 @@ def limit_content_length():
 	
 @app.errorhandler(404)
 def page_not_found(e):
-	expires 	= datetime.datetime.now() + datetime.timedelta(seconds=app.config['SECONDS'])
 	response 	= make_response('', 404)
-	response.headers['Expires'] 		= expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
-	response.headers['Cache-Control'] 	= 'max-age='+str(app.config['SECONDS'])
 	return response
 
 if __name__ == "__main__":
