@@ -15,7 +15,7 @@ CORS(app, origins='*')
 app.config['SECONDS'] 				= int(os.environ.get('EXPIRES', 2419200))  # 30 day
 app.config['SECRET_KEY'] 			= os.environ.get('SECRET_KEY', '-w@8sp$gcafk*+sqis#+356smh%a1xs^ff^zz8b4%%e7i8t!wo')
 app.config['UPLOAD_FOLDER'] 		= os.environ.get('UPLOAD_FOLDER', 'temp/')
-app.config['ALLOWED_EXTENSIONS'] 	= {'.png', '.jpg', '.webp', '.svg', '.gif', '.bmp'}
+app.config['ALLOWED_EXTENSIONS'] 	= {'.png', '.jpg', '.webp', '.svg', '.gif', '.bmp', '.ico'}
 app.config['MAX_FILE_SIZE'] 		= int(os.environ.get('MAX_FILE_SIZE', 50 * 1024 * 1024)) 
 app.config['SCHEME'] 				= os.environ.get('SCHEME', 'http')
 app.config['S3']					= os.environ.get('S3', 'False')
@@ -102,9 +102,7 @@ def file_remove(full_file_name):
         os.remove(full_file_name)
 
 def compress_image(full_file_name, EXTENSIONS):
-	if EXTENSIONS == '.gif':
-		return True
-	elif EXTENSIONS == '.svg':
+	if EXTENSIONS in {'.gif', '.svg'}:
 		return True
 	else:
 		try:
@@ -153,8 +151,10 @@ def upload():
 					if app.config['S3'] == 'True':
 						if upload_to_s3(full_file_name, file_name, extra_args = {
                             'ContentType': file.content_type,
+                            'CacheControl': str(app.config['SECONDS']),
                             'Metadata': {
-                                'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr
+                                'ip': request.headers.get("Do-Connecting-Ip") or request.remote_addr,
+                                'datetime': datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
                             }
                         }):
 							messages = app.config['SCHEME'] + '://' + request.host + '/media/'+ file_name
