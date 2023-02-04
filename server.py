@@ -136,7 +136,7 @@ def get_uuid():
 	# Generate a random ObjectId
 	id_uuid = str(bson.ObjectId())
 	# Generate a random UUID
-	random_uuid = str(uuid.uuid4())
+	random_uuid = str(uuid.uuid4()).replace("-", "_")
 	id_uuid = id_uuid + "_" + random_uuid
 	return id_uuid
 		
