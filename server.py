@@ -106,7 +106,7 @@ def compress_image(full_file_name, EXTENSIONS):
 	if EXTENSIONS in {'.svg'}:
 		return True
 	elif EXTENSIONS == '.gif':
-		with open(filepath, 'rb') as f:
+		with open(full_file_name, 'rb') as f:
 			header = f.read(6)
 			if  header == b'GIF89a' or header == b'GIF87a':
 				return True
