@@ -101,9 +101,18 @@ def file_remove(full_file_name):
     if os.path.exists(full_file_name):
         os.remove(full_file_name)
 
+# check inject file
 def compress_image(full_file_name, EXTENSIONS):
-	if EXTENSIONS in {'.gif', '.svg'}:
+	if EXTENSIONS in {'.svg'}:
 		return True
+	elif EXTENSIONS == '.gif':
+		with open(filepath, 'rb') as f:
+			header = f.read(6)
+			if  header == b'GIF89a' or header == b'GIF87a':
+				return True
+			else:
+				file_remove(full_file_name)
+				return False
 	else:
 		try:
 			image = Image.open(full_file_name)
